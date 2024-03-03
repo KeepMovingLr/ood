@@ -1,0 +1,64 @@
+@startuml
+actor User
+participant "Frontend Application" as Frontend
+participant "Authorization Server" as AuthServer
+participant "Newsletter API" as API
+database Database
+participant "Notification Service" as NotificationService
+participant "SMS Service" as SMSService
+participant "Email Service" as EmailService
+
+User -> Frontend: Choose to Unsubscribe
+activate Frontend
+
+Frontend -> AuthServer: Request Token
+activate AuthServer
+
+AuthServer --> Frontend: Token
+deactivate AuthServer
+
+Frontend -> API: DELETE /api/newsletter/unsubscribe\nAuthorization: Bearer {Token}
+activate API
+
+API -> AuthServer: Validate Token
+activate AuthServer
+AuthServer --> API: Valid Token
+deactivate AuthServer
+
+API -> Database: Delete Subscriber Info
+activate Database
+Database --> API: Success
+deactivate Database
+
+API --> Frontend: Unsubscription Successful
+deactivate API
+
+Frontend -> API: POST /api/newsletter/createNotification/{subscriberId}\nAuthorization: Bearer {Token}
+activate API
+
+API -> AuthServer: Validate Token
+activate AuthServer
+AuthServer --> API: Valid Token
+deactivate AuthServer
+
+API -> NotificationService: Create Cancellation Notification
+activate NotificationService
+NotificationService --> API: Cancellation Notification Created
+deactivate NotificationService
+
+API -> SMSService: Send Confirmation SMS
+activate SMSService
+SMSService --> API: SMS Sent
+deactivate SMSService
+
+API -> EmailService: Send Confirmation Email
+activate EmailService
+EmailService --> API: Email Sent
+deactivate EmailService
+
+API --> Frontend: Confirmation Notification Sent
+deactivate API
+
+User <- Frontend: Receives Unsubscription Confirmation
+
+@enduml

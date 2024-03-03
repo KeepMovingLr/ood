@@ -1,0 +1,64 @@
+@startuml
+actor User
+participant "Frontend Application" as Frontend
+participant "Authorization Server" as AuthServer
+participant "Newsletter API" as API
+database Database
+participant "Notification Service" as NotificationService
+participant "SMS Service" as SMSService
+participant "Email Service" as EmailService
+
+User -> Frontend: Choose to Update Subscription
+activate Frontend
+
+Frontend -> AuthServer: Request Token
+activate AuthServer
+
+AuthServer --> Frontend: Token
+deactivate AuthServer
+
+Frontend -> API: PUT /api/newsletter/update-subscription\nAuthorization: Bearer {Token}
+activate API
+
+API -> AuthServer: Validate Token
+activate AuthServer
+AuthServer --> API: Valid Token
+deactivate AuthServer
+
+API -> Database: Update Subscriber Info
+activate Database
+Database --> API: Success
+deactivate Database
+
+API --> Frontend: Subscription Information Updated
+deactivate API
+
+Frontend -> API: POST /api/newsletter/createNotification/{subscriberId}\nAuthorization: Bearer {Token}
+activate API
+
+API -> AuthServer: Validate Token
+activate AuthServer
+AuthServer --> API: Valid Token
+deactivate AuthServer
+
+API -> NotificationService: Create Update Notification
+activate NotificationService
+NotificationService --> API: Update Notification Created
+deactivate NotificationService
+
+API -> SMSService: Send Update SMS
+activate SMSService
+SMSService --> API: SMS Sent
+deactivate SMSService
+
+API -> EmailService: Send Update Email
+activate EmailService
+EmailService --> API: Email Sent
+deactivate EmailService
+
+API --> Frontend: Update Confirmation Notification Sent
+deactivate API
+
+User <- Frontend: Receives Update Confirmation
+
+@enduml

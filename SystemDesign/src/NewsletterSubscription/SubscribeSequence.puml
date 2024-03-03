@@ -1,0 +1,63 @@
+@startuml
+autonumber
+actor User
+participant "Frontend Application" as Frontend
+participant "Authorization Server" as AuthServer
+participant "Newsletter API" as API
+database Database
+participant "Notification Service" as NotificationService
+participant "SMS Service" as SMSService
+participant "Email Service" as EmailService
+
+User -> Frontend: Choose to Subscribe
+activate Frontend
+
+Frontend -> AuthServer: Request Token
+activate AuthServer
+
+AuthServer --> Frontend: Token
+deactivate AuthServer
+
+Frontend -> API: POST /api/newsletter/subscribe\nAuthorization: Bearer {Token}
+activate API
+
+API -> AuthServer: Validate Token
+activate AuthServer
+AuthServer --> API: Valid Token
+deactivate AuthServer
+API -> Database: Check if subscribed already
+Database --> API: result
+
+Alt Already subscribed before
+API --> Frontend: Subscription Successful
+User <-- Frontend: Already subscribe successfully
+
+else
+API -> Database: Save Subscriber Info
+activate Database
+Database --> API: Success
+deactivate Database
+
+API -> NotificationService: Create Notification
+activate NotificationService
+NotificationService --> API: Notification Created
+deactivate NotificationService
+
+alt subscribe by phone
+    API --> SMSService: Send SMS
+    activate SMSService
+    SMSService --> API: SMS Sent
+    deactivate SMSService
+else subscribe by email
+    API -> EmailService: Send Email
+    activate EmailService
+    EmailService --> API: Email Sent
+    deactivate EmailService
+end
+
+API --> Frontend: Subscription Successful
+deactivate API
+
+User <- Frontend: Receives Confirmation
+end
+@enduml
