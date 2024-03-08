@@ -1,4 +1,5 @@
 @startuml
+autonumber
 actor User
 participant "Frontend Application" as Frontend
 participant "Authorization Server" as AuthServer
@@ -24,40 +25,34 @@ API -> AuthServer: Validate Token
 activate AuthServer
 AuthServer --> API: Valid Token
 deactivate AuthServer
-
-API -> Database: Delete Subscriber Info
-activate Database
-Database --> API: Success
-deactivate Database
-
+API -> Database: check if already unsubscribed before
+Database --> API: result
+alt already unsubscribed before
 API --> Frontend: Unsubscription Successful
+else hasn't been unsubscribed
+    API -> Database: Delete Subscriber Info
+    activate Database
+    Database --> API: Success
+    deactivate Database
+
+    API --> Frontend: Unsubscription Successful
+
+    API --> NotificationService: Create Cancellation Notification
+    activate NotificationService
+    NotificationService --> API: Cancellation Notification Created
+    deactivate NotificationService
+
+    API --> SMSService: Send Confirmation SMS
+    activate SMSService
+    SMSService --> API: SMS Sent
+    deactivate SMSService
+
+    API --> EmailService: Send Confirmation Email
+    activate EmailService
+    EmailService --> API: Email Sent
+    deactivate EmailService
 deactivate API
-
-Frontend -> API: POST /api/newsletter/createNotification/{subscriberId}\nAuthorization: Bearer {Token}
-activate API
-
-API -> AuthServer: Validate Token
-activate AuthServer
-AuthServer --> API: Valid Token
-deactivate AuthServer
-
-API -> NotificationService: Create Cancellation Notification
-activate NotificationService
-NotificationService --> API: Cancellation Notification Created
-deactivate NotificationService
-
-API -> SMSService: Send Confirmation SMS
-activate SMSService
-SMSService --> API: SMS Sent
-deactivate SMSService
-
-API -> EmailService: Send Confirmation Email
-activate EmailService
-EmailService --> API: Email Sent
-deactivate EmailService
-
-API --> Frontend: Confirmation Notification Sent
-deactivate API
+end
 
 User <- Frontend: Receives Unsubscription Confirmation
 

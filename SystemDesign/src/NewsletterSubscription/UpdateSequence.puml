@@ -1,4 +1,5 @@
 @startuml
+autonumber
 actor User
 participant "Frontend Application" as Frontend
 participant "Authorization Server" as AuthServer
