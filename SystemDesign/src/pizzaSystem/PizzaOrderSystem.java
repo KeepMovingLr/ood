@@ -1,4 +1,4 @@
-package PizzaSystem;
+package pizzaSystem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
